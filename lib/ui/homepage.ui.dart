@@ -26,6 +26,9 @@ class _MyHomePageState extends State<MyHomePage> {
   late DateTime _lastSyncTime = _dateTimeNow;
 
   late Realm usersRealm;
+  late Realm usersRealmInsert;
+  late Realm usersRealmUpdate;
+  late Realm usersRealmDelete;
   late Realm changeLogRealm;
   late Configuration configuration;
 
@@ -45,6 +48,9 @@ class _MyHomePageState extends State<MyHomePage> {
   _MyHomePageState() {
     final usersConfig = Configuration.local([Users.schema]);
     usersRealm = Realm(usersConfig);
+    usersRealmInsert = Realm(usersConfig);
+    usersRealmUpdate = Realm(usersConfig);
+    usersRealmDelete = Realm(usersConfig);
     final changeLogConfig = Configuration.local([ChangeLog.schema]);
     changeLogRealm = Realm(changeLogConfig);
   }
@@ -58,7 +64,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    usersRealm.close();
+    usersRealmInsert.close();
+    usersRealmUpdate.close();
+    usersRealmDelete.close();
     changeLogRealm.close();
     super.dispose();
   }
@@ -83,6 +91,72 @@ class _MyHomePageState extends State<MyHomePage> {
       _lastSyncTime = DateTime.parse(lastSyncTimeString);
       setState(() {});
     }
+  }
+
+  Future<void> _manipulateLocalData(Users data, String action) async {
+    usersRealm.write(() async {
+      // the below addition value should change
+      switch (action) {
+        case 'INSERT':
+          {
+            usersRealm.add(data);
+            break;
+          }
+        case 'UPDATE':
+          {
+            List<String> updatedFields = [];
+            final oldData = usersRealm.find<Users>(data.email);
+
+            if (oldData != null) {
+              if (oldData.username != data.username) {
+                oldData.username = data.username;
+                updatedFields.add('username');
+              }
+              if (oldData.age != data.age) {
+                oldData.age = data.age;
+                updatedFields.add('age');
+              }
+              if (oldData.city != data.city) {
+                oldData.city = data.city;
+                updatedFields.add('city');
+              }
+              if (oldData.updatedAt != data.updatedAt) {
+                oldData.updatedAt = data.updatedAt;
+                // updatedFields.add('updatedAt');
+              }
+              if (oldData.isActive != data.isActive) {
+                oldData.isActive = data.isActive;
+                updatedFields.add('isActive');
+              }
+              data.createdAt = oldData.createdAt;
+              oldData.updatedAt = data.updatedAt;
+              data.updatedAt = oldData.updatedAt;
+            } else {
+              // data not found
+              _insertLocalData(data);
+            }
+            break;
+          }
+        case 'DELETE':
+          {
+            final obj = usersRealm.find<Users>(data.email);
+            if (obj != null && obj.isActive == true) {
+              // soft delete
+              data.id = obj.id;
+              data.username = obj.username;
+              data.createdAt = obj.createdAt;
+              obj.updatedAt = data.updatedAt;
+              data.updatedAt = obj.updatedAt;
+              obj.isActive = false;
+            } else {
+              // data not found
+              data.isActive = false;
+              _insertLocalData(data);
+            }
+            break;
+          }
+      }
+    });
   }
 
   Future<void> _getUsersFromLocal() async {
@@ -118,12 +192,21 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _insertLocalData(Users data) async {
     bool operationDone = false;
 
-    usersRealm.write(() {
+    usersRealmInsert.close();
+    print('closed');
+    await Future.delayed(const Duration(seconds: 2));
+    final usersConfig = Configuration.local([Users.schema]);
+    usersRealmInsert = Realm(usersConfig);
+    print('re initialized');
+    await Future.delayed(const Duration(seconds: 1));
+    print('write starts');
+    usersRealmInsert.write(() {
+      print('test a 000');
       // the below addition value should change
-      usersRealm.add(data);
+      usersRealmInsert.add(data);
+      print('test a 001');
       operationDone = true;
     });
-
     if (operationDone == true) {
       await _addingActionToChangeLogs('INSERT', data);
     }
@@ -134,8 +217,23 @@ class _MyHomePageState extends State<MyHomePage> {
     bool operationDone = false;
     List<String> updatedFields = [];
 
-    usersRealm.write(() {
-      final oldData = usersRealm.find<Users>(newData.email);
+    // usersRealm.close();
+    // print('closed');
+    // await Future.delayed(const Duration(seconds: 2));
+    // final usersConfig = Configuration.local([Users.schema]);
+    // usersRealm = Realm(usersConfig);
+    // print('re initialized');
+    // await Future.delayed(const Duration(seconds: 1));
+    // print('write starts');
+    // if (usersRealm.isClosed) {
+    //   final usersConfig = Configuration.local([Users.schema]);
+    //   usersRealm = Realm(usersConfig);
+    //   print('re initialized');
+    //   await Future.delayed(const Duration(seconds: 4));
+    // }
+    // if (!usersRealm.isClosed) {
+    usersRealmUpdate.write(() {
+      final oldData = usersRealmUpdate.find<Users>(newData.email);
 
       if (oldData != null) {
         if (oldData.username != newData.username) {
@@ -167,21 +265,33 @@ class _MyHomePageState extends State<MyHomePage> {
         _insertLocalData(newData);
       }
     });
-
     if (operationDone == true) {
       await _addingActionToChangeLogs('UPDATE', newData,
           updatedFields: updatedFields);
     }
+    // }
   }
 
   // delete data to local realm db
   Future<void> _deleteLocalData(Users data) async {
     bool operationDone = false;
 
+    // usersRealm.close();
+    // print('closed');
+    // await Future.delayed(const Duration(seconds: 2));
+    // final usersConfig = Configuration.local([Users.schema]);
+    // usersRealm = Realm(usersConfig);
+    // print('re initialized');
+    // await Future.delayed(const Duration(seconds: 1));
+    // print('write starts');
+
     usersRealm.write(() {
       // the below deletion value should change
+      print('test 000');
       final obj = usersRealm.find<Users>(data.email);
+      print('test 001');
       if (obj != null && obj.isActive == true) {
+        print('test 003');
         // soft delete
         data.id = obj.id;
         data.username = obj.username;
@@ -190,11 +300,16 @@ class _MyHomePageState extends State<MyHomePage> {
         data.updatedAt = obj.updatedAt;
         obj.isActive = false;
         operationDone = true;
+        print('test 004');
       } else {
         // data not found
+        print('test 005');
+
+        data.isActive = false;
+        _insertLocalData(data);
+        print('test 006');
       }
     });
-
     if (operationDone == true) {
       await _addingActionToChangeLogs('DELETE', data,
           updatedFields: ['isActive']);
@@ -204,7 +319,17 @@ class _MyHomePageState extends State<MyHomePage> {
   // adding actions to changelogs table
   Future<void> _addingActionToChangeLogs(String action, Users data,
       {List<String>? updatedFields}) async {
+    // changeLogRealm.close();
+    // print('closed');
+    // await Future.delayed(const Duration(seconds: 2));
+    // final changeLogConfig = Configuration.local([ChangeLog.schema]);
+    // changeLogRealm = Realm(changeLogConfig);
+    // print('re initialized');
+    // await Future.delayed(const Duration(seconds: 1));
+    // print('write starts');
+
     changeLogRealm.write(() {
+      print('test 007');
       final List<String> tempUpdateFields = updatedFields ?? [];
       final oldObject = changeLogRealm.all<ChangeLog>();
       for (int i = oldObject.length - 1; i >= 0; i--) {
@@ -218,6 +343,7 @@ class _MyHomePageState extends State<MyHomePage> {
           break;
         }
       }
+      print('test 008');
       final DateTime createdAt = DateTime.now().toUtc();
       final dataString = jsonEncode({
         "id": data.id,
@@ -229,11 +355,13 @@ class _MyHomePageState extends State<MyHomePage> {
         "updatedAt": data.updatedAt.toString(),
         "isActive": data.isActive
       });
+      print('test 008');
       changeLogRealm.add(ChangeLog(
           data.id, action, dataString, createdAt, createdAt, 'USERS',
           updatedFields: tempUpdateFields.isNotEmpty
               ? tempUpdateFields as Iterable<String>
               : []));
+      print('test 009');
     });
   }
 
@@ -414,11 +542,14 @@ class _MyHomePageState extends State<MyHomePage> {
     print('_process data removing duplicates done for updatesRequiredOnServer');
     print(updatesRequiredOnServer);
 
+    await _syncDataBackend(updatesRequiredOnServer);
+    print('_process data backend sync done');
+
     await _syncDataFrontend(updatesRequiredOnLocal);
     print('_process data frontend sync done');
 
-    await _syncDataBackend(updatesRequiredOnServer);
-    print('_process data backend sync done');
+    _deleteCangeLogsFromLocalDb();
+    print('_process data changeLogs local db deletion done');
 
     _setLastSyncTime();
     print('_process data last sync time is set');
@@ -623,6 +754,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
               ),
+            Container(
+              height: 100,
+            )
           ],
         ),
       ),
@@ -632,9 +766,9 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             FloatingActionButton(
               onPressed: () async {
-                int id = 2;
-                String username = 'Santhosh2 - FE';
-                String email = 'Santhosh2@gmail.com';
+                int id = 48;
+                String username = 'Santhosh48 - FE';
+                String email = 'Santhosh48@gmail.com';
                 int age = 21;
                 String city = 'Pune';
                 DateTime createdAt = DateTime.now().toUtc();
@@ -665,11 +799,11 @@ class _MyHomePageState extends State<MyHomePage> {
             const Spacer(),
             FloatingActionButton(
               onPressed: () async {
-                int id = 2;
-                String username = 'Santhosh2 - FE - updated';
-                String email = 'Santhosh2@gmail.com';
-                int age = 25;
-                String city = 'Hyderabad';
+                int id = 47;
+                String username = 'Santhosh47 - FE - updated';
+                String email = 'Santhosh47@gmail.com';
+                int age = 10001;
+                String city = 'Lucknow';
                 DateTime updatedAt = DateTime.now().toUtc();
                 bool isActive = true;
 
@@ -698,11 +832,11 @@ class _MyHomePageState extends State<MyHomePage> {
             const Spacer(),
             FloatingActionButton(
               onPressed: () async {
-                int id = 2;
-                String username = 'Santhosh2 - FE - updated';
-                String email = 'Santhosh2@gmail.com';
-                int age = 25;
-                String city = 'Hyderabad';
+                int id = 36;
+                String username = 'Santhosh36 - FE';
+                String email = 'Santhosh36@gmail.com';
+                int age = 21;
+                String city = 'Pune';
                 DateTime createdAt = DateTime.now().toUtc();
                 bool isActive = false;
 
@@ -735,6 +869,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 await _getFreshChangeLogsFromServer();
                 setState(() {});
                 _processData();
+                _getUsersFromLocal();
               },
               child: Center(
                 child: Container(
@@ -751,12 +886,28 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () async {
                 await _printUsersLocalData();
                 await _printChangeLogLocalData();
+                _getUsersFromLocal();
               },
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.all(5),
                   child: const Text(
                     'Print Data',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+            const Spacer(),
+            FloatingActionButton(
+              onPressed: () async {
+                _deleteCangeLogsFromLocalDb();
+              },
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  child: const Text(
+                    'Delete Changelogs',
                     textAlign: TextAlign.center,
                   ),
                 ),
