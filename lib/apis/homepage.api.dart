@@ -36,7 +36,6 @@ class HomePageApi {
   }
 
   Future<List<ChangeLog>> getChangeLogApi({String? lastSyncedTime}) async {
-    print(DateTime.parse(lastSyncedTime.toString()).toUtc());
     final List<ChangeLog> result = await http.post(
         Uri.parse(
             'https://1f10-2401-4900-1c53-1630-31db-ccc8-8676-c374.ngrok-free.app/api/changeLog/getChangeLogs'),
@@ -44,7 +43,6 @@ class HomePageApi {
           "timeStamp":
               DateTime.parse(lastSyncedTime.toString()).toUtc().toString()
         }).then((Response result) {
-      print(result.body);
       final jsonData = jsonDecode(result.body);
 
       if (jsonData.isNotEmpty) {
@@ -74,11 +72,9 @@ class HomePageApi {
   Future<void> sendDataToServer(List<ChangeLog> data) async {
     List<Map<String, dynamic>> resultObj = [];
 
-    print(data);
-
     for (int i = 0; i < data.length; i++) {
       Map<String, dynamic> tempData = {
-        "userId": data[i].userId,
+        "uid": data[i].uid,
         "action": data[i].action,
         "data": jsonDecode(data[i].data),
         "tableName": data[i].tableName,
@@ -89,8 +85,6 @@ class HomePageApi {
 
       resultObj.add(tempData);
     }
-
-    print(resultObj);
 
     await http.post(
         Uri.parse(

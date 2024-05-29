@@ -8,7 +8,7 @@ part of 'models.db.dart';
 
 class Users extends _Users with RealmEntity, RealmObjectBase, RealmObject {
   Users(
-    int id,
+    String uid,
     String username,
     String email,
     int age,
@@ -17,7 +17,7 @@ class Users extends _Users with RealmEntity, RealmObjectBase, RealmObject {
     DateTime updatedAt,
     bool isActive,
   ) {
-    RealmObjectBase.set(this, 'id', id);
+    RealmObjectBase.set(this, 'uid', uid);
     RealmObjectBase.set(this, 'username', username);
     RealmObjectBase.set(this, 'email', email);
     RealmObjectBase.set(this, 'age', age);
@@ -30,9 +30,9 @@ class Users extends _Users with RealmEntity, RealmObjectBase, RealmObject {
   Users._();
 
   @override
-  int get id => RealmObjectBase.get<int>(this, 'id') as int;
+  String get uid => RealmObjectBase.get<String>(this, 'uid') as String;
   @override
-  set id(int value) => RealmObjectBase.set(this, 'id', value);
+  set uid(String value) => RealmObjectBase.set(this, 'uid', value);
 
   @override
   String get username =>
@@ -86,9 +86,9 @@ class Users extends _Users with RealmEntity, RealmObjectBase, RealmObject {
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(Users._);
     return const SchemaObject(ObjectType.realmObject, Users, 'Users', [
-      SchemaProperty('id', RealmPropertyType.int),
+      SchemaProperty('uid', RealmPropertyType.string, primaryKey: true),
       SchemaProperty('username', RealmPropertyType.string),
-      SchemaProperty('email', RealmPropertyType.string, primaryKey: true),
+      SchemaProperty('email', RealmPropertyType.string),
       SchemaProperty('age', RealmPropertyType.int),
       SchemaProperty('city', RealmPropertyType.string),
       SchemaProperty('createdAt', RealmPropertyType.timestamp),
@@ -101,7 +101,7 @@ class Users extends _Users with RealmEntity, RealmObjectBase, RealmObject {
 class ChangeLog extends _ChangeLog
     with RealmEntity, RealmObjectBase, RealmObject {
   ChangeLog(
-    int userId,
+    String uid,
     String action,
     String data,
     DateTime createdAt,
@@ -109,7 +109,7 @@ class ChangeLog extends _ChangeLog
     String tableName, {
     Iterable<String> updatedFields = const [],
   }) {
-    RealmObjectBase.set(this, 'userId', userId);
+    RealmObjectBase.set(this, 'uid', uid);
     RealmObjectBase.set(this, 'action', action);
     RealmObjectBase.set(this, 'data', data);
     RealmObjectBase.set(this, 'createdAt', createdAt);
@@ -122,9 +122,9 @@ class ChangeLog extends _ChangeLog
   ChangeLog._();
 
   @override
-  int get userId => RealmObjectBase.get<int>(this, 'userId') as int;
+  String get uid => RealmObjectBase.get<String>(this, 'uid') as String;
   @override
-  set userId(int value) => RealmObjectBase.set(this, 'userId', value);
+  set uid(String value) => RealmObjectBase.set(this, 'uid', value);
 
   @override
   String get action => RealmObjectBase.get<String>(this, 'action') as String;
@@ -175,7 +175,7 @@ class ChangeLog extends _ChangeLog
   static SchemaObject _initSchema() {
     RealmObjectBase.registerFactory(ChangeLog._);
     return const SchemaObject(ObjectType.realmObject, ChangeLog, 'ChangeLog', [
-      SchemaProperty('userId', RealmPropertyType.int),
+      SchemaProperty('uid', RealmPropertyType.string),
       SchemaProperty('action', RealmPropertyType.string),
       SchemaProperty('data', RealmPropertyType.string),
       SchemaProperty('updatedFields', RealmPropertyType.string,
@@ -183,6 +183,91 @@ class ChangeLog extends _ChangeLog
       SchemaProperty('createdAt', RealmPropertyType.timestamp),
       SchemaProperty('updatedAt', RealmPropertyType.timestamp),
       SchemaProperty('tableName', RealmPropertyType.string),
+    ]);
+  }
+}
+
+class Book extends _Book with RealmEntity, RealmObjectBase, RealmObject {
+  Book(
+    String uid,
+    String title,
+    String author,
+    String releaseYear,
+    DateTime createdAt,
+    DateTime updatedAt,
+    bool isActive,
+  ) {
+    RealmObjectBase.set(this, 'uid', uid);
+    RealmObjectBase.set(this, 'title', title);
+    RealmObjectBase.set(this, 'author', author);
+    RealmObjectBase.set(this, 'releaseYear', releaseYear);
+    RealmObjectBase.set(this, 'createdAt', createdAt);
+    RealmObjectBase.set(this, 'updatedAt', updatedAt);
+    RealmObjectBase.set(this, 'isActive', isActive);
+  }
+
+  Book._();
+
+  @override
+  String get uid => RealmObjectBase.get<String>(this, 'uid') as String;
+  @override
+  set uid(String value) => RealmObjectBase.set(this, 'uid', value);
+
+  @override
+  String get title => RealmObjectBase.get<String>(this, 'title') as String;
+  @override
+  set title(String value) => RealmObjectBase.set(this, 'title', value);
+
+  @override
+  String get author => RealmObjectBase.get<String>(this, 'author') as String;
+  @override
+  set author(String value) => RealmObjectBase.set(this, 'author', value);
+
+  @override
+  String get releaseYear =>
+      RealmObjectBase.get<String>(this, 'releaseYear') as String;
+  @override
+  set releaseYear(String value) =>
+      RealmObjectBase.set(this, 'releaseYear', value);
+
+  @override
+  DateTime get createdAt =>
+      RealmObjectBase.get<DateTime>(this, 'createdAt') as DateTime;
+  @override
+  set createdAt(DateTime value) =>
+      RealmObjectBase.set(this, 'createdAt', value);
+
+  @override
+  DateTime get updatedAt =>
+      RealmObjectBase.get<DateTime>(this, 'updatedAt') as DateTime;
+  @override
+  set updatedAt(DateTime value) =>
+      RealmObjectBase.set(this, 'updatedAt', value);
+
+  @override
+  bool get isActive => RealmObjectBase.get<bool>(this, 'isActive') as bool;
+  @override
+  set isActive(bool value) => RealmObjectBase.set(this, 'isActive', value);
+
+  @override
+  Stream<RealmObjectChanges<Book>> get changes =>
+      RealmObjectBase.getChanges<Book>(this);
+
+  @override
+  Book freeze() => RealmObjectBase.freezeObject<Book>(this);
+
+  static SchemaObject get schema => _schema ??= _initSchema();
+  static SchemaObject? _schema;
+  static SchemaObject _initSchema() {
+    RealmObjectBase.registerFactory(Book._);
+    return const SchemaObject(ObjectType.realmObject, Book, 'Book', [
+      SchemaProperty('uid', RealmPropertyType.string, primaryKey: true),
+      SchemaProperty('title', RealmPropertyType.string),
+      SchemaProperty('author', RealmPropertyType.string),
+      SchemaProperty('releaseYear', RealmPropertyType.string),
+      SchemaProperty('createdAt', RealmPropertyType.timestamp),
+      SchemaProperty('updatedAt', RealmPropertyType.timestamp),
+      SchemaProperty('isActive', RealmPropertyType.bool),
     ]);
   }
 }
