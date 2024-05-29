@@ -152,36 +152,70 @@ class _MyHomePageState extends State<MyHomePage> {
     List<String> updatedFields = [];
 
     usersRealmUpdate.write(() {
-      final oldData = usersRealmUpdate.find<Users>(usersData?.email);
+      if (usersData != null) {
+        final oldData = usersRealmUpdate.find<Users>(usersData.uid);
 
-      if (oldData != null) {
-        if (oldData.username != usersData?.username) {
-          oldData.username = usersData!.username;
-          updatedFields.add('username');
+        if (oldData != null) {
+          if (oldData.username != usersData.username) {
+            oldData.username = usersData!.username;
+            updatedFields.add('username');
+          }
+          if (oldData.age != usersData.age) {
+            oldData.age = usersData.age;
+            updatedFields.add('age');
+          }
+          if (oldData.city != usersData.city) {
+            oldData.city = usersData.city;
+            updatedFields.add('city');
+          }
+          if (oldData.updatedAt != usersData.updatedAt) {
+            oldData.updatedAt = usersData.updatedAt;
+            // updatedFields.add('updatedAt');
+          }
+          if (oldData.isActive != usersData.isActive) {
+            oldData.isActive = usersData.isActive;
+            updatedFields.add('isActive');
+          }
+          usersData.createdAt = oldData.createdAt;
+          oldData.updatedAt = usersData.updatedAt;
+          usersData.updatedAt = oldData.updatedAt;
+          operationDone = true;
+        } else {
+          // data not found
+          _insertLocalData(usersData, bookData, tableName: tableName);
         }
-        if (oldData.age != usersData?.age) {
-          oldData.age = usersData!.age;
-          updatedFields.add('age');
+      } else if (bookData != null) {
+        final oldData = usersRealmUpdate.find<Book>(bookData.uid);
+
+        if (oldData != null) {
+          if (oldData.title != bookData.title) {
+            oldData.title = bookData.title;
+            updatedFields.add('title');
+          }
+          if (oldData.author != bookData.author) {
+            oldData.author = bookData.author;
+            updatedFields.add('author');
+          }
+          if (oldData.releaseYear != bookData.releaseYear) {
+            oldData.releaseYear = bookData.releaseYear;
+            updatedFields.add('releaseYear');
+          }
+          if (oldData.updatedAt != bookData.updatedAt) {
+            oldData.updatedAt = bookData.updatedAt;
+            // updatedFields.add('updatedAt');
+          }
+          if (oldData.isActive != bookData.isActive) {
+            oldData.isActive = bookData.isActive;
+            updatedFields.add('isActive');
+          }
+          bookData.createdAt = oldData.createdAt;
+          oldData.updatedAt = bookData.updatedAt;
+          bookData.updatedAt = oldData.updatedAt;
+          operationDone = true;
+        } else {
+          // data not found
+          _insertLocalData(usersData, bookData, tableName: tableName);
         }
-        if (oldData.city != usersData?.city) {
-          oldData.city = usersData!.city;
-          updatedFields.add('city');
-        }
-        if (oldData.updatedAt != usersData?.updatedAt) {
-          oldData.updatedAt = usersData!.updatedAt;
-          // updatedFields.add('updatedAt');
-        }
-        if (oldData.isActive != usersData?.isActive) {
-          oldData.isActive = usersData!.isActive;
-          updatedFields.add('isActive');
-        }
-        usersData?.createdAt = oldData.createdAt;
-        oldData.updatedAt = usersData!.updatedAt;
-        usersData.updatedAt = oldData.updatedAt;
-        operationDone = true;
-      } else {
-        // data not found
-        _insertLocalData(usersData, bookData, tableName: tableName);
       }
     });
     if (operationDone == true) {
