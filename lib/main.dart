@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:realm_local_db/ui/homepage.ui.dart';
+// import 'package:realm_local_db/ui/homepage.ui.dart';
+import 'package:realm_local_db/ui/hompage_2.ui.dart';
 
 void main() {
-
   runApp(const MyApp());
 }
 
